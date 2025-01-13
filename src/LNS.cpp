@@ -18,18 +18,24 @@ bool LNS::run_repeat_Hungarian_greedy()
     remain_task_id = all_task_id;
     int remain_tasks = num_of_tasks;
 
+    // Iterate until all tasks are assigned
     while (remain_tasks > 0)
     {
         assigned_tasks.clear();
         int row = max(num_of_agents, remain_tasks);
         dlib::matrix<int> cost(row, row);
+
+        // Initialize cost matrix
 	    for (int i = 0; i < row; i++)
         {
+            // If there are more agents than tasks, set the cost to pseudonull
             if (i >= num_of_agents)
             {
                 for (int j = 0; j < row; j++)
                     cost(i, j) = -2147483;
             }
+
+            // Otherwise, calculate the cost
             else
             {
                 for (int j = 0; j < row; j++)
@@ -213,7 +219,7 @@ bool LNS::run(int time_limit)
     int best_makespan = initial_makespan;
     int best_flowtime = initial_flowtime;
     clock_t t = clock();
-    // while (((fsec)(Time::now()- start_time)).count() < time_limit) {
+
     while ((std::clock() - t) * 1.0/ CLOCKS_PER_SEC < time_limit)
     {
         // high_resolution_clock::time_point curr_time = Time::now();

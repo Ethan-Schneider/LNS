@@ -79,8 +79,7 @@ private:
     int removed_task = 0;
     float relatedness_weight1 = 9;
     float relatedness_weight2 = 3;
-    // float relatedness_weight1 = 0.01;
-    // float relatedness_weight2 = 0.003;
+    
     int p = 6;
     float gamma = 0.01;
     int max_task_num = 0;
