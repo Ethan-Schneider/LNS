@@ -11,6 +11,7 @@ bool LNS::run_repeat_Hungarian_greedy()
 
     vector<int> all_task_id;
     vector<int> remain_task_id;
+    // Get all task ids
     for (auto t : tl.tasks_all)
     {
         all_task_id.push_back(t.task_id);
@@ -40,6 +41,7 @@ bool LNS::run_repeat_Hungarian_greedy()
             {
                 for (int j = 0; j < row; j++)
                 {
+                    // If there are more tasks than agents, set the cost to pseudonull
                     if (j >= remain_tasks)
                     {
                         cost(i, j) = -2147483;
@@ -47,14 +49,19 @@ bool LNS::run_repeat_Hungarian_greedy()
                     }
                     else
                     {
+                        // Get Task and Agent
                         Task& task = tl.tasks_all[tl.tasks_table[remain_task_id[j]]];
                         Agent& agent = al.agents_all[i];
                         int temp_cost = 0;
+                        // If the agent has already been assigned some tasks
                         if (agent.task_sequence.size() > 0)
                         {
+                            // Calculate Makespan for the agent's sequence of tasks
                             temp_cost = calculateMakespan(agent, agent.task_sequence);
+                            // Get the last task in the agent's sequence
                             Task& last_task = tl.tasks_all[tl.tasks_table[agent.task_sequence[agent.task_sequence.size()-1]]];
                             // temp_cost += G.get_Manhattan_distance(last_task.goal_arr[last_task.goal_arr.size()-1], task.goal_arr[0]);
+                            // Add the cost of the last task to the agent's makespan
                             temp_cost += G.heuristics.at(last_task.goal_arr[last_task.goal_arr.size()-1])[task.goal_arr[0]];
                         }
                         else
@@ -62,10 +69,13 @@ bool LNS::run_repeat_Hungarian_greedy()
                             // temp_cost = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);  
                             temp_cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];           
                         }
+                        // Compare the cost of the task to the release time, whichever is longer is the cost
                         temp_cost = max(temp_cost, task.release_time);
+                        // Iterate over the task's goal locations and add to the temp cost
                         for (int k = 0; k < task.goal_arr.size()-1; k++)
                             temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
                             // temp_cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
+                        // Set the cost in the cost matrix ==== But why negative? 
                         cost(i, j) = -temp_cost;
                     }
                 }
@@ -73,15 +83,22 @@ bool LNS::run_repeat_Hungarian_greedy()
         }
         vector<long> assignment = max_cost_assignment(cost);
         int curr_remain_tasks = remain_tasks;
+        // Assign tasks to agents
+
+        //Iterate over agents
         for (int i = 0; i < al.agents_all.size(); i++)
 	    {
+            // Get the agent
             Agent& ag = al.agents_all[i];
+            // ???
             if (assignment[i] < curr_remain_tasks)
             {
+                // Add the task to the agent's assigned tasks
                 assigned_tasks.push_back(remain_task_id[assignment[i]]);
                 ag.task_sequence.push_back(remain_task_id[assignment[i]]);
             }
         }
+        // Remove assigned tasks from the list of remaining tasks
         for (int i : assigned_tasks)
             remain_task_id.erase(std::remove(remain_task_id.begin(), remain_task_id.end(), i), remain_task_id.end());
         remain_tasks = remain_tasks - assigned_tasks.size();
@@ -201,6 +218,8 @@ bool LNS::run(int time_limit)
         this->lns_insertion_strategy = 1;
     }
     // cout << "LNS runtime is " << initial_runtime << endl;
+    
+    // Get Initial Solution via Hungarian Greedy
     if (!getInitialSolution()) {
         return false;
     }
@@ -372,6 +391,7 @@ int LNS::calculateMakespan(Agent agent, vector<int> task_sequence)
     int makespan = 0;
     for (int i = 0; i < task_sequence.size(); i++) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[i]]];
+        // If it is the first task for the agent
         if (i == 0) {
             // makespan = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
             makespan = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
