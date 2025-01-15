@@ -37,16 +37,18 @@ typedef boost::heap::pairing_heap<TaskAssignment, boost::heap::compare<CompareTa
 class Task{
 public:
     int task_id;
-    // vector<int> goal_arr;
     int start_location;
     int goal_location;
-    // int release_time;
+    float relatedness;  
+    int delta_cost;
+
     std::map<Key, handle_t> ta; 
     boost::heap::pairing_heap<TaskAssignment, boost::heap::compare<CompareTaskAssignment>> assignment_heap;
     
-    Task(int id, int start_location, int goal_location)
-        : task_id(id), start_location(start_location), goal_location(goal_location)
+    Task(int start_location, int goal_location)
+        : start_location(start_location), goal_location(goal_location)
         {};
+    // Task Constructor
     Task(){};
     // ~Task();
 };
@@ -92,8 +94,7 @@ public:
         return true;
     }
     // TasksLoader(const std::map<int, std::tuple<int, int, int>>& current_tasks, vector<int> undelivered_tasks, vector<int> assigned_endpoints);
-    TasksLoader(const std::map<int, Task>& current_tasks, vector<int> undelivered_tasks, vector<int> assigned_endpoints);
+    TasksLoader(const std::map<int, Task>& current_tasks, const std::map<int, Task>& unasigned_tasks);
     TasksLoader();
-    // ~TasksLoader();
 };
 typedef boost::heap::pairing_heap<TaskAssignment, boost::heap::compare<CompareTaskAssignment>>::handle_type handle_t;
