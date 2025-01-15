@@ -1,18 +1,17 @@
-#include "KivaGraph.h"
-
 #include <boost/program_options.hpp>
 #include <boost/tokenizer.hpp>
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 #include <pybind11/stl.h>
 
-int pymain()
+#include "KivaGraph.h"
+
+int pymain(string& map_file)
 {
     namespace py=pybind11;
 
-    std::string map-file = "maps/symbotic_small.map";
     KivaGrid G;
-    if (!G.load_map(map-file))
+    if (!G.load_Minghua_map(map_file))
     {
         std::cout << "Failed to load map." << std::endl;
         return 1;

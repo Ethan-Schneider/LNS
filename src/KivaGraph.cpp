@@ -33,7 +33,6 @@ bool KivaGrid::load_map(std::string fname)
 	move[1] = -cols;
 	move[2] = -1;
 	move[3] = cols;
-
 	getline(myfile, line); // skip the headers
 
 	//read tyeps and edge weights
@@ -62,6 +61,7 @@ bool KivaGrid::load_map(std::string fname)
 				weights[i][j] = std::stod(beg->c_str());
 			beg++;
 		}
+		
 	}
 
 	myfile.close();
@@ -90,7 +90,6 @@ bool KivaGrid::load_Minghua_map(std::string fname)
 	std::size_t pos = fname.rfind('.');      // position of the file extension
     map_name = fname.substr(0, pos);     // get the name without extension
     getline (myfile, line); 
-	
 	
 	boost::char_separator<char> sep(",");
 	boost::tokenizer< boost::char_separator<char> > tok(line, sep);
