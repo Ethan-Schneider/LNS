@@ -18,3 +18,4 @@ CMakeCache.txt
 lifelong
 Makefile
 build/
+.venv/
