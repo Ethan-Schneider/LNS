@@ -7,7 +7,7 @@
 #include "KivaGraph.h"
 #include "TasksLoader.h"
 
-int pymain(string& map_file)
+int pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> assigned_tasks, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks)
 {
     namespace py=pybind11;
 
@@ -18,7 +18,7 @@ int pymain(string& map_file)
         return 1;
     }
 
-    G.print_map_condensed();
+    G.print_map();
 
     return 0;
 }

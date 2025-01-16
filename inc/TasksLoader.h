@@ -7,6 +7,8 @@
 #include <boost/unordered_map.hpp>
 #include <iostream>
 
+#include "KivaGraph.h"
+
 // using namespace std;
 using boost::unordered_map;
 using std::vector;
@@ -93,7 +95,7 @@ public:
         }
         return true;
     }
-    // TasksLoader(const std::map<int, std::tuple<int, int, int>>& current_tasks, vector<int> undelivered_tasks, vector<int> assigned_endpoints);
+    TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& current_tasks, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& undelivered_tasks);
     TasksLoader(const std::map<int, Task>& current_tasks, const std::map<int, Task>& unasigned_tasks);
     TasksLoader();
 };

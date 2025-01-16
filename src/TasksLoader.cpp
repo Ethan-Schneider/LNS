@@ -1,6 +1,5 @@
 #include "TasksLoader.h"
 #include <map>
-#include <vector>
 
 TasksLoader::TasksLoader(const std::map<int, Task>& current_tasks, const std::map<int, Task>& unasigned_tasks)
 {
@@ -24,4 +23,29 @@ TasksLoader::TasksLoader(const std::map<int, Task>& current_tasks, const std::ma
     //     tasks_table.insert(std::make_pair(task_id, idx));
     //     idx++;
     // }
+}
+
+TasksLoader::TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& current_tasks, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& undelivered_tasks)
+{
+    for (int i = 0; i < current_tasks.size(); i++)
+    {
+        int start_id = G.cols*std::get<1>(std::get<1>(current_tasks[i])) + std::get<0>(std::get<1>(current_tasks[i]));
+        int goal_id = G.cols*std::get<1>(std::get<2>(current_tasks[i])) + std::get<0>(std::get<2>(current_tasks[i]));
+
+        Task task = Task(start_id, goal_id);
+        task.task_id = std::get<0>(current_tasks[i]);
+        tasks_all.push_back(task);
+        tasks_table.insert(std::make_pair(task.task_id, i));
+    }
+    for (int i = 0; i < undelivered_tasks.size(); i++)
+    {
+        int start_id = G.cols*std::get<1>(std::get<1>(undelivered_tasks[i])) + std::get<0>(std::get<1>(undelivered_tasks[i]));
+        int goal_id = G.cols*std::get<1>(std::get<2>(undelivered_tasks[i])) + std::get<0>(std::get<2>(undelivered_tasks[i]));
+
+
+        Task task = Task(start_id, goal_id);
+        task.task_id = std::get<0>(undelivered_tasks[i]);
+        tasks_all.push_back(task);
+        tasks_table.insert(std::make_pair(task.task_id, i));
+    }
 }
