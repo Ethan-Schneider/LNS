@@ -49,3 +49,13 @@ TasksLoader::TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, st
         tasks_table.insert(std::make_pair(task.task_id, i));
     }
 }
+
+void TasksLoader::print_tasks()
+{
+    for (int i = 0; i < tasks_all.size(); i++)
+    {
+        std::cout << "Task ID: " << tasks_all[i].task_id << " ";
+        std::cout << "Start Location: " << tasks_all[i].start_location << " ";
+        std::cout << "Goal Location: " << tasks_all[i].goal_location << std::endl;
+    }
+}

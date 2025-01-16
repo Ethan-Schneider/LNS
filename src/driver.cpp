@@ -19,6 +19,8 @@ int pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>
     }
 
     G.print_map();
+    TasksLoader tl(G, assigned_tasks, unassigned_tasks);
+    tl.print_tasks();
 
     return 0;
 }

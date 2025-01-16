@@ -98,5 +98,6 @@ public:
     TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& current_tasks, const std::vector<std::tuple<int, std::tuple<int, int>, std::tuple<int, int>>>& undelivered_tasks);
     TasksLoader(const std::map<int, Task>& current_tasks, const std::map<int, Task>& unasigned_tasks);
     TasksLoader();
+    void print_tasks();
 };
 typedef boost::heap::pairing_heap<TaskAssignment, boost::heap::compare<CompareTaskAssignment>>::handle_type handle_t;
