@@ -25,7 +25,6 @@ void BasicGraph::print_map() const
     }
 }
 
-
 int BasicGraph::get_rotate_degree(int dir1, int dir2) const
 {
     if (dir1 == dir2)

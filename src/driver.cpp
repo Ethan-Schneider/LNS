@@ -5,6 +5,7 @@
 #include <pybind11/stl.h>
 
 #include "KivaGraph.h"
+#include "TasksLoader.h"
 
 int pymain(string& map_file)
 {
@@ -17,7 +18,7 @@ int pymain(string& map_file)
         return 1;
     }
 
-    G.print_map();
+    G.print_map_condensed();
 
     return 0;
 }
