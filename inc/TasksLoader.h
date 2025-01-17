@@ -43,6 +43,7 @@ public:
     int goal_location;
     float relatedness;  
     int delta_cost;
+    int pick_up_time = 0, delivery_time = 0;
 
     std::map<Key, handle_t> ta; 
     boost::heap::pairing_heap<TaskAssignment, boost::heap::compare<CompareTaskAssignment>> assignment_heap;

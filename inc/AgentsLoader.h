@@ -1,7 +1,7 @@
 /*
  * This code is modified from https://github.com/Jiaoyang-Li/Flatland
 */
-
+#pragma once
 #include "States.h"
 #include "BasicGraph.h"
 #include "KivaGraph.h"
@@ -32,10 +32,6 @@ public:
     vector<Agent> agents_all; // agent_all store all the agent and agents_all[i] has agent_id i
     int curr_assignment_flowtime;
     
-    // Agents id and current location
-
-    AgentsLoader(const KivaGrid& G, std::map<int, vector<int>> delivering_agents, vector<vector<int>>& task_sequences);
-
     // REPLAN
     AgentsLoader(const KivaGrid& G, const vector<State>& starts,
             std::map<int, vector<int>> delivering_agents,

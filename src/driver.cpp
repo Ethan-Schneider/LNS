@@ -8,9 +8,10 @@
 #include "TasksLoader.h"
 #include "AgentsLoader.h"
 #include "States.h"
+#include "LNS.h"
 
 int pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> assigned_tasks, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks, vector<tuple<int, tuple<int, int>>> agents, 
-    vector<tuple<int, vector<int>>> task_sequences)
+    vector<vector<int>> task_sequences)
 {
     namespace py=pybind11;
 
@@ -22,6 +23,7 @@ int pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>
     }
 
     G.print_map();
+    G.preprocessing(0);
     TasksLoader tl(G, assigned_tasks, unassigned_tasks);
     tl.print_tasks();
 
@@ -45,7 +47,40 @@ int pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>
     }
     std::map<int, vector<int>> delivering_agents;
 
+    std::cout << "Task sequences:" << std::endl;
+    for (const auto& sequence : task_sequences)
+    {
+        for (const auto& task : sequence)
+        {
+            std::cout << task << " ";
+        }
+        std::cout << std::endl;
+    }
+
     AgentsLoader al(G, starts, delivering_agents, task_sequences);
 
+    for (size_t i = 0; i < al.agents_all.size(); ++i)
+    {
+        if (i < task_sequences.size())
+        {
+            al.agents_all[i].task_sequence = task_sequences[i];
+        }
+    }
+
+    for (const auto& agent : al.agents_all)
+    {
+        std::cout << "Agent " << agent.agent_id << " task sequence: ";
+        for (const auto& task : agent.task_sequence)
+        {
+            std::cout << task << " ";
+        }
+        std::cout << std::endl;
+    }
+
+    LNS lns(G, tl, al, 2, 1, 2, 2);
+    lns.run(1); // 1 second time limit
+
+    std::cout << "Finished LNS Execution" << std::endl;
+    lns.printTaskSequence();
     return 0;
 }
