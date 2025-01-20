@@ -11,7 +11,6 @@ bool LNS::run_repeat_Hungarian_greedy()
 
     vector<int> all_task_id;
     vector<int> remain_task_id;
-    // Get all task ids
     for (auto t : tl.tasks_all)
     {
         all_task_id.push_back(t.task_id);
@@ -19,29 +18,22 @@ bool LNS::run_repeat_Hungarian_greedy()
     remain_task_id = all_task_id;
     int remain_tasks = num_of_tasks;
 
-    // Iterate until all tasks are assigned
     while (remain_tasks > 0)
     {
         assigned_tasks.clear();
         int row = max(num_of_agents, remain_tasks);
         dlib::matrix<int> cost(row, row);
-
-        // Initialize cost matrix
 	    for (int i = 0; i < row; i++)
         {
-            // If there are more agents than tasks, set the cost to pseudonull
             if (i >= num_of_agents)
             {
                 for (int j = 0; j < row; j++)
                     cost(i, j) = -2147483;
             }
-
-            // Otherwise, calculate the cost
             else
             {
                 for (int j = 0; j < row; j++)
                 {
-                    // If there are more tasks than agents, set the cost to pseudonull
                     if (j >= remain_tasks)
                     {
                         cost(i, j) = -2147483;
@@ -49,33 +41,25 @@ bool LNS::run_repeat_Hungarian_greedy()
                     }
                     else
                     {
-                        // Get Task and Agent
                         Task& task = tl.tasks_all[tl.tasks_table[remain_task_id[j]]];
                         Agent& agent = al.agents_all[i];
                         int temp_cost = 0;
-                        // If the agent has already been assigned some tasks
                         if (agent.task_sequence.size() > 0)
                         {
-                            // Calculate Makespan for the agent's sequence of tasks
                             temp_cost = calculateMakespan(agent, agent.task_sequence);
-                            // Get the last task in the agent's sequence
                             Task& last_task = tl.tasks_all[tl.tasks_table[agent.task_sequence[agent.task_sequence.size()-1]]];
                             // temp_cost += G.get_Manhattan_distance(last_task.goal_arr[last_task.goal_arr.size()-1], task.goal_arr[0]);
-                            // Add the cost of the last task to the agent's makespan
-                            temp_cost += G.heuristics.at(last_task.goal_location)[task.goal_location];
+                            temp_cost += G.heuristics.at(last_task.goal_arr[last_task.goal_arr.size()-1])[task.goal_arr[0]];
                         }
                         else
                         {
                             // temp_cost = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);  
-                            temp_cost = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];    
+                            temp_cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];           
                         }
-                        // Compare the cost of the task to the release time, whichever is longer is the cost
-                        // temp_cost = max(temp_cost);
-                        // Iterate over the task's goal locations and add to the temp cost
-                        // for (int k = 0; k < task.goal_arr.size()-1; k++)
-                        //     temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
+                        // temp_cost = max(temp_cost, task.release_time);
+                        for (int k = 0; k < task.goal_arr.size()-1; k++)
+                            temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
                             // temp_cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
-                        // Set the cost in the cost matrix ==== But why negative? 
                         cost(i, j) = -temp_cost;
                     }
                 }
@@ -83,22 +67,15 @@ bool LNS::run_repeat_Hungarian_greedy()
         }
         vector<long> assignment = max_cost_assignment(cost);
         int curr_remain_tasks = remain_tasks;
-        // Assign tasks to agents
-
-        //Iterate over agents
         for (int i = 0; i < al.agents_all.size(); i++)
 	    {
-            // Get the agent
             Agent& ag = al.agents_all[i];
-            // ???
             if (assignment[i] < curr_remain_tasks)
             {
-                // Add the task to the agent's assigned tasks
                 assigned_tasks.push_back(remain_task_id[assignment[i]]);
                 ag.task_sequence.push_back(remain_task_id[assignment[i]]);
             }
         }
-        // Remove assigned tasks from the list of remaining tasks
         for (int i : assigned_tasks)
             remain_task_id.erase(std::remove(remain_task_id.begin(), remain_task_id.end(), i), remain_task_id.end());
         remain_tasks = remain_tasks - assigned_tasks.size();
@@ -131,13 +108,13 @@ bool LNS::run_Hungarian_greedy()
                     Agent& agent = al.agents_all[i];
                     int temp_cost = 0;
                     // int waiting_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-                    int waiting_time = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
+                    int waiting_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
                     // waiting_time = max(0,task.release_time-waiting_time);
                     // temp_cost = G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
                     // temp_cost = G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
                     temp_cost = waiting_time;
-                    // for (int k = 0; k < task.goal_arr.size()-1; k++)
-                    //     temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
+                    for (int k = 0; k < task.goal_arr.size()-1; k++)
+                        temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
                         // temp_cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
                     cost(i, j) = -temp_cost;
                 }
@@ -174,9 +151,9 @@ bool LNS::run_HBH_greedy()
             Agent& agent = al.agents_all[j];
             int cost = 0;
             // cost = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-            cost = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
-            // for (int k = 0; k < task.goal_arr.size()-1; k++)
-            //     cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
+            cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
+            for (int k = 0; k < task.goal_arr.size()-1; k++)
+                cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
                 // cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
             task_agent_pair.push_back(make_tuple(task.task_id-1, agent.agent_id-1, cost));
         }
@@ -218,14 +195,10 @@ bool LNS::run(int time_limit)
         this->lns_insertion_strategy = 1;
     }
     // cout << "LNS runtime is " << initial_runtime << endl;
-    
-    cout << "Getting Initial Solution" << endl;
-    // Get Initial Solution via Hungarian Greedy
     if (!getInitialSolution()) {
         return false;
     }
-    printTaskSequence();
-    std::cout << "Get Initial Solution: Done" << std::endl;
+
     initial_makespan = getMakespan();
     initial_flowtime = getFlowtime();
     // initial_runtime = ((fsec)(Time::now() - start_time)).count();
@@ -240,7 +213,7 @@ bool LNS::run(int time_limit)
     int best_makespan = initial_makespan;
     int best_flowtime = initial_flowtime;
     clock_t t = clock();
-
+    // while (((fsec)(Time::now()- start_time)).count() < time_limit) {
     while ((std::clock() - t) * 1.0/ CLOCKS_PER_SEC < time_limit)
     {
         // high_resolution_clock::time_point curr_time = Time::now();
@@ -347,17 +320,17 @@ void LNS::generateNeighborsByShawRemoval()
             Task& task = tl.tasks_all[tl.tasks_table[agent.task_sequence[i]]];
             if (i == 0) {
                 // pick_up_time += agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-                pick_up_time += agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
+                pick_up_time += agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
             }
             task.pick_up_time = pick_up_time;
             task.delivery_time = task.pick_up_time;
-            // for (int k = 1; k <= task.goal_arr.size()-1; k++)
-            //     task.delivery_time += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k-1]];
+            for (int k = 1; k <= task.goal_arr.size()-1; k++)
+                task.delivery_time += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k-1]];
                 // task.delivery_time += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k-1]);
             if (i != agent.task_sequence.size()-1) {
                 Task& next_task = tl.tasks_all[tl.tasks_table[agent.task_sequence[i+1]]];
                 // pick_up_time = task.delivery_time + G.get_Manhattan_distance(task.goal_arr.back(), next_task.goal_arr[0]);
-                pick_up_time = task.delivery_time + G.heuristics.at(task.goal_location)[next_task.goal_location];
+                pick_up_time = task.delivery_time + G.heuristics.at(task.goal_arr.back())[next_task.goal_arr[0]];
             }
         }
     }
@@ -366,8 +339,8 @@ void LNS::generateNeighborsByShawRemoval()
         // task.relatedness = relatedness_weight1 * (G.get_Manhattan_distance(task.goal_arr.back(), random_task.goal_arr.back())
         //     + G.get_Manhattan_distance(task.goal_arr[0], random_task.goal_arr[0])) + 
         //     + relatedness_weight2 * (std::abs(task.pick_up_time - random_task.pick_up_time) + std::abs(task.delivery_time - random_task.delivery_time));
-        task.relatedness = relatedness_weight1 * (G.heuristics.at(task.goal_location)[random_task.goal_location])
-            + G.heuristics.at(task.goal_location)[random_task.goal_location] + 
+        task.relatedness = relatedness_weight1 * (G.heuristics.at(task.goal_arr.back())[random_task.goal_arr.back()])
+            + G.heuristics.at(task.goal_arr[0])[random_task.goal_arr[0]] + 
             + relatedness_weight2 * (std::abs(task.pick_up_time - random_task.pick_up_time) + std::abs(task.delivery_time - random_task.delivery_time));
     }
     quickSort(neighbors, 0, neighbors.size()-1, false, insertion_strategy, removal_strategy);
@@ -393,23 +366,20 @@ int LNS::calculateMakespan(Agent agent, vector<int> task_sequence)
     int makespan = 0;
     for (int i = 0; i < task_sequence.size(); i++) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[i]]];
-        // If it is the first task for the agent
         if (i == 0) {
             // makespan = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-            makespan = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
-            // makespan = std::max(task.release_time, makespan; // same as TA-Prioritized
+            makespan = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
         }
-        // if (task.goal_arr.size() > 1)
-        // {
-        //     for (int j = 0; j < task.goal_arr.size()-1; j++)
-        //         makespan += G.heuristics.at(task.goal_arr[j])[task.goal_arr[j+1]];
-        //         // makespan += G.get_Manhattan_distance(task.goal_arr[j], task.goal_arr[j+1]);
-        // }
+        if (task.goal_arr.size() > 1)
+        {
+            for (int j = 0; j < task.goal_arr.size()-1; j++)
+                makespan += G.heuristics.at(task.goal_arr[j])[task.goal_arr[j+1]];
+                // makespan += G.get_Manhattan_distance(task.goal_arr[j], task.goal_arr[j+1]);
+        }
         if (i != task_sequence.size()-1 ) {
             Task& next_task = tl.tasks_all[tl.tasks_table[task_sequence[i+1]]];
             // makespan += G.get_Manhattan_distance(task.goal_arr.back(), next_task.goal_arr[0]);
-            makespan += G.heuristics.at(task.goal_location)[next_task.goal_location];
-            // makespan = std::max(next_task.release_time, makespan);
+            makespan += G.heuristics.at(task.goal_arr.back())[next_task.goal_arr[0]];
         }
     }
     return makespan;
@@ -417,7 +387,7 @@ int LNS::calculateMakespan(Agent agent, vector<int> task_sequence)
 
 int LNS::calculateFlowtime(Agent agent, vector<int> task_sequence)
 {
-    // int sum_of_release_time = 0;
+    int sum_of_release_time = 0;
     int sum_of_delivery_time = 0;
     int delivery_time = 0;
     if (task_sequence.size() == 0) {
@@ -427,48 +397,44 @@ int LNS::calculateFlowtime(Agent agent, vector<int> task_sequence)
     if (task_sequence.size() == 1) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[0]]];
         // delivery_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-        delivery_time = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
-        // delivery_time = std::max(delivery_time, task.release_time);
+        delivery_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
         
-        // if (task.goal_arr.size() > 1)
-        // {
-        //     for (int i = 0; i < task.goal_arr.size()-1; i++)
-        //         delivery_time += G.heuristics.at(task.goal_arr[i])[task.goal_arr[i+1]];
-        //         // delivery_time += G.get_Manhattan_distance(task.goal_arr[i], task.goal_arr[i+1]);
-        // }
+        if (task.goal_arr.size() > 1)
+        {
+            for (int i = 0; i < task.goal_arr.size()-1; i++)
+                delivery_time += G.heuristics.at(task.goal_arr[i])[task.goal_arr[i+1]];
+                // delivery_time += G.get_Manhattan_distance(task.goal_arr[i], task.goal_arr[i+1]);
+        }
         sum_of_delivery_time += delivery_time;
     }
     for (int i = 0; i < task_sequence.size()-1; i++) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[i]]];
         Task& next_task = tl.tasks_all[tl.tasks_table[task_sequence[i+1]]];
-        // sum_of_release_time += task.release_time;
         if (i == 0) {
             // delivery_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-            delivery_time = agent.start_timestep + G.heuristics.at(task.goal_location)[agent.start_location];
-            // delivery_time = std::max(delivery_time, task.release_time);
+            delivery_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
         }
-        // if (task.goal_arr.size() > 1)
-        // {
-        //     for (int k = 0; k < task.goal_arr.size()-1; k++)
-        //         delivery_time += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
-        //         // delivery_time += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
-        // }
+        if (task.goal_arr.size() > 1)
+        {
+            for (int k = 0; k < task.goal_arr.size()-1; k++)
+                delivery_time += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
+                // delivery_time += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
+        }
         sum_of_delivery_time += delivery_time;
         // delivery_time += G.get_Manhattan_distance(task.goal_arr[task.goal_arr.size()-1], next_task.goal_arr[0]);
-        delivery_time += G.heuristics.at(task.goal_location)[next_task.goal_location];
-        // delivery_time = std::max(delivery_time, next_task.release_time);
+        delivery_time += G.heuristics.at(task.goal_arr[task.goal_arr.size()-1])[next_task.goal_arr[0]];
         if (i == task_sequence.size()-2) {
-            // if (next_task.goal_arr.size() > 1)
-            // {
-            //     for (int k = 0; k < next_task.goal_arr.size()-1; k++)
-            //         delivery_time += G.heuristics.at(next_task.goal_arr[k])[next_task.goal_arr[k+1]];
-            //         // delivery_time += G.get_Manhattan_distance(next_task.goal_arr[k], next_task.goal_arr[k+1]);
-            // }
+            if (next_task.goal_arr.size() > 1)
+            {
+                for (int k = 0; k < next_task.goal_arr.size()-1; k++)
+                    delivery_time += G.heuristics.at(next_task.goal_arr[k])[next_task.goal_arr[k+1]];
+                    // delivery_time += G.get_Manhattan_distance(next_task.goal_arr[k], next_task.goal_arr[k+1]);
+            }
             sum_of_delivery_time += delivery_time;
         }
     }
     // sum_of_release_time += tl.tasks_all[tl.tasks_table[task_sequence[task_sequence.size()-1]]].release_time;
-    return sum_of_delivery_time;
+    return sum_of_delivery_time - sum_of_release_time;
 }
 
 bool LNS::getInitialSolution()
@@ -636,12 +602,10 @@ int LNS::getMakespan()
 
 void LNS::printTaskSequence()
 {
-    std::cout << "Printing Task Sequences for Agents" << std::endl;
     for (auto& agent : al.agents_all)
     {
         // cout << "after 2 agent.task_sequence.size() " << agent.task_sequence.size() << endl;
-        // cout << " == Flowtime : " << calculateFlowtime(agent, agent.task_sequence)/agent.task_sequence.size() << " ";
-        cout << "Agent " << agent.agent_id << " delivering task ids: ";
+        cout << " == Flowtime : " << calculateFlowtime(agent, agent.task_sequence)/agent.task_sequence.size() << " ";
         for (auto i : agent.task_sequence)
             cout << i << " ";
         cout << endl;

@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 2.6)
 
 project(lns)
-set(CMAKE_CXX_STANDARD 20)
 set(PYBIND11_PYTHON_VERSION 3.11.7)
 set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
 

@@ -32,8 +32,9 @@ TasksLoader::TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, st
         int start_id = G.cols*std::get<0>(std::get<1>(current_tasks[i])) + std::get<1>(std::get<1>(current_tasks[i]));
         int goal_id = G.cols*std::get<0>(std::get<2>(current_tasks[i])) + std::get<1>(std::get<2>(current_tasks[i]));
 
-        Task task = Task(start_id, goal_id);
-        task.task_id = std::get<0>(current_tasks[i]);
+        vector<int> goal_arr ={start_id, goal_id};
+
+        Task task = Task(std::get<0>(current_tasks[i]), goal_arr);
         tasks_all.push_back(task);
         tasks_table.insert(std::make_pair(task.task_id, i));
     }
@@ -42,9 +43,9 @@ TasksLoader::TasksLoader(const KivaGrid& G, const std::vector<std::tuple<int, st
         int start_id = G.cols*std::get<0>(std::get<1>(undelivered_tasks[i])) + std::get<1>(std::get<1>(undelivered_tasks[i]));
         int goal_id = G.cols*std::get<0>(std::get<2>(undelivered_tasks[i])) + std::get<1>(std::get<2>(undelivered_tasks[i]));
 
+        vector<int> goal_arr ={start_id, goal_id};
 
-        Task task = Task(start_id, goal_id);
-        task.task_id = std::get<0>(undelivered_tasks[i]);
+        Task task = Task(std::get<0>(current_tasks[i]), goal_arr);
         tasks_all.push_back(task);
         tasks_table.insert(std::make_pair(task.task_id, i));
     }
@@ -55,7 +56,10 @@ void TasksLoader::print_tasks()
     for (int i = 0; i < tasks_all.size(); i++)
     {
         std::cout << "Task ID: " << tasks_all[i].task_id << " ";
-        std::cout << "Start Location: " << tasks_all[i].start_location << " ";
-        std::cout << "Goal Location: " << tasks_all[i].goal_location << std::endl;
+        std::cout << "Goal Arr: ";
+        for (int j = 0; j < tasks_all[i].goal_arr.size(); j++)
+        {
+            std::cout << tasks_all[i].goal_arr[j] << " ";
+        }
     }
 }
