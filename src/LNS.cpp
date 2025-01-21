@@ -2,7 +2,7 @@
  * This code is modified from https://github.com/Jiaoyang-Li/Flatland
 */
 
-#include "LNS.h"
+#include "../inc/LNS.h"
 
 bool LNS::run_repeat_Hungarian_greedy()
 {
@@ -17,7 +17,6 @@ bool LNS::run_repeat_Hungarian_greedy()
     }
     remain_task_id = all_task_id;
     int remain_tasks = num_of_tasks;
-
     while (remain_tasks > 0)
     {
         assigned_tasks.clear();
@@ -47,6 +46,7 @@ bool LNS::run_repeat_Hungarian_greedy()
                         if (agent.task_sequence.size() > 0)
                         {
                             temp_cost = calculateMakespan(agent, agent.task_sequence);
+
                             Task& last_task = tl.tasks_all[tl.tasks_table[agent.task_sequence[agent.task_sequence.size()-1]]];
                             // temp_cost += G.get_Manhattan_distance(last_task.goal_arr[last_task.goal_arr.size()-1], task.goal_arr[0]);
                             temp_cost += G.heuristics.at(last_task.goal_arr[last_task.goal_arr.size()-1])[task.goal_arr[0]];
@@ -54,7 +54,7 @@ bool LNS::run_repeat_Hungarian_greedy()
                         else
                         {
                             // temp_cost = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);  
-                            temp_cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];           
+                            temp_cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];      
                         }
                         // temp_cost = max(temp_cost, task.release_time);
                         for (int k = 0; k < task.goal_arr.size()-1; k++)
@@ -201,6 +201,7 @@ bool LNS::run(int time_limit)
 
     initial_makespan = getMakespan();
     initial_flowtime = getFlowtime();
+
     // initial_runtime = ((fsec)(Time::now() - start_time)).count();
     // double runtime = (std::clock() - t) * 1.0/ CLOCKS_PER_SEC;
 
@@ -295,15 +296,27 @@ bool LNS::run(int time_limit)
         }
     }
 
-    // return task sequence
-    int agent_num = al.agents_all.size();
-    for (int i = 0; i < agent_num; i++) {
-        Agent& ag = al.agents_all[i];
-         (*ag.new_task_sequence).clear();
-        for (int e : ag.task_sequence) {
-            (*ag.new_task_sequence).push_back(e);
-        }
-    }
+    // printTaskSequence();
+
+    // cout << "Return Task Sequence" << endl;
+    // // return task sequence
+    // int agent_num = al.agents_all.size();
+    // for (int i = 0; i < agent_num; i++) {
+    //     cout << "Creating new Agent" << endl;
+    //     Agent& ag = al.agents_all[i];
+    //     cout << "Clearing new task sequence" << endl;
+    //     (*ag.new_task_sequence).clear();
+    //     for (int e : ag.task_sequence) {
+    //         cout << "Pushing back new task sequence" << endl;
+    //         cout << e << endl;
+    //         cout << "New Task Sequence Size: " << (*ag.new_task_sequence).size() << endl;
+    //         (*ag.new_task_sequence).push_back(e);
+    //         cout << "New Task Sequence Size: " << (*ag.new_task_sequence).size() << endl;
+    //         cout << "Pushed back new task sequence" << endl;
+    //     }
+    //     cout << "Exited nested for loop" << endl;
+    // }
+    cout << "Returning from LNS" << endl;
     return true;
 }
 
@@ -605,9 +618,20 @@ void LNS::printTaskSequence()
     for (auto& agent : al.agents_all)
     {
         // cout << "after 2 agent.task_sequence.size() " << agent.task_sequence.size() << endl;
-        cout << " == Flowtime : " << calculateFlowtime(agent, agent.task_sequence)/agent.task_sequence.size() << " ";
+        // cout << " == Flowtime : " << calculateFlowtime(agent, agent.task_sequence)/agent.task_sequence.size() << " ";
+        cout << "Agent " << agent.agent_id << " task sequence: ";
         for (auto i : agent.task_sequence)
             cout << i << " ";
         cout << endl;
     }
+}
+
+vector<tuple<int, vector<int>>> LNS::getTaskSequence()
+{
+    vector<tuple<int, vector<int>>> task_sequence;
+    for (auto& agent : al.agents_all)
+    {
+        task_sequence.push_back(make_tuple(agent.agent_id, agent.task_sequence));
+    }
+    return task_sequence;
 }

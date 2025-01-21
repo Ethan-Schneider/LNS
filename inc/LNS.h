@@ -60,6 +60,7 @@ public:
     bool run_repeat_Hungarian_greedy();
     bool getInitialSolution();
     void printTaskSequence();
+    vector<tuple<int, vector<int>>> getTaskSequence();
     int getFlowtime(Agent agent, vector<int> task_sequence);
 
 private:

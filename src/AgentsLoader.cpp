@@ -1,7 +1,7 @@
 /*
  * This code is modified from https://github.com/Jiaoyang-Li/Flatland
 */
-#include "AgentsLoader.h"
+#include "../inc/AgentsLoader.h"
 #include <string>
 #include <iostream>
 #include <sstream>
