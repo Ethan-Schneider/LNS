@@ -10,7 +10,7 @@
 #include "States.h"
 #include "../inc/LNS.h"
 
-vector<tuple<int, vector<int>>> pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> assigned_tasks, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks, vector<tuple<int, tuple<int, int>>> agents, 
+vector<tuple<int, vector<int>>> pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks, vector<tuple<int, tuple<int, int>>> agents, 
     vector<vector<int>> task_sequences)
 {
     namespace py=pybind11;
@@ -24,7 +24,7 @@ vector<tuple<int, vector<int>>> pymain(string& map_file, vector<tuple<int, tuple
     }
 
     G.preprocessing(0);
-    TasksLoader tl(G, assigned_tasks, unassigned_tasks);
+    TasksLoader tl(G, unassigned_tasks);
 
     vector<tuple<int, int>> agent_ids;
     for (const auto& agent : agents)
