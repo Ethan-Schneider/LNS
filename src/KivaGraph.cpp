@@ -17,7 +17,7 @@ bool KivaGrid::load_map(std::string fname)
 		return false;
 	}
 
-	std::cout << "*** Loading map ***" << std::endl;
+	// std::cout << "*** Loading map ***" << std::endl;
 	clock_t t = std::clock();
 	std::size_t pos = fname.rfind('.');      // position of the file extension
 	map_name = fname.substr(0, pos);     // get the name without extension
@@ -66,10 +66,10 @@ bool KivaGrid::load_map(std::string fname)
 
 	myfile.close();
 	double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
-	std::cout << "Map size: " << rows << "x" << cols << " with ";
-	cout << endpoints.size() << " endpoints and " <<
-		agent_home_locations.size() << " home stations." << std::endl;
-	std::cout << "Done! (" << runtime << " s)" << std::endl;
+	// std::cout << "Map size: " << rows << "x" << cols << " with ";
+	// cout << endpoints.size() << " endpoints and " <<
+	// 	agent_home_locations.size() << " home stations." << std::endl;
+	// std::cout << "Done! (" << runtime << " s)" << std::endl;
 	return true;
 }
 
@@ -85,7 +85,7 @@ bool KivaGrid::load_Minghua_map(std::string fname)
         return false;
     }
 	
-    std::cout << "*** Loading map ***" << std::endl;
+    // std::cout << "*** Loading map ***" << std::endl;
     clock_t t = std::clock();
 	std::size_t pos = fname.rfind('.');      // position of the file extension
     map_name = fname.substr(0, pos);     // get the name without extension
@@ -176,10 +176,10 @@ bool KivaGrid::load_Minghua_map(std::string fname)
 
 	myfile.close();
     double runtime = (std::clock() - t) / CLOCKS_PER_SEC;
-    std::cout << "Map size: " << rows << "x" << cols << " with ";
-	cout << endpoints.size() << " endpoints and " <<
-	agent_home_locations.size() << " home stations." << std::endl;		
-    std::cout << "Done! (" << runtime << " s)" << std::endl;
+    // std::cout << "Map size: " << rows << "x" << cols << " with ";
+	// cout << endpoints.size() << " endpoints and " <<
+	// agent_home_locations.size() << " home stations." << std::endl;		
+    // std::cout << "Done! (" << runtime << " s)" << std::endl;
     return true;
 }
 
