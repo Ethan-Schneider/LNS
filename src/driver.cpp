@@ -61,3 +61,28 @@ vector<tuple<int, vector<int>>> pymain(string& map_file, vector<tuple<int, tuple
 
     return lns.getTaskSequence();
 }
+
+double distance(string& map_file, tuple<int, int> start_loc, tuple<int, int> goal_loc)
+{
+    namespace py=pybind11;
+
+    KivaGrid G;
+    if (!G.load_Minghua_map(map_file))
+    {   
+        std::cout << "Failed to load map." << std::endl;
+        double empty;
+        return empty;
+    }
+
+    G.preprocessing(0);
+
+    int start_id = G.cols*std::get<0>(start_loc) + std::get<1>(start_loc);
+    int goal_id = G.cols*std::get<0>(goal_loc) + std::get<1>(goal_loc);
+
+    if (start_id == goal_id)
+    {
+        return 0;
+    }
+
+    return G.heuristics.at(goal_id)[start_id];
+}
