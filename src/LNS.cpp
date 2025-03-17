@@ -36,7 +36,6 @@ bool LNS::run_repeat_Hungarian_greedy()
                     if (j >= remain_tasks)
                     {
                         cost(i, j) = -2147483;
-                        // cout << cost(i, j) << endl;
                     }
                     else
                     {
@@ -48,18 +47,22 @@ bool LNS::run_repeat_Hungarian_greedy()
                             temp_cost = calculateMakespan(agent, agent.task_sequence);
 
                             Task& last_task = tl.tasks_all[tl.tasks_table[agent.task_sequence[agent.task_sequence.size()-1]]];
-                            // temp_cost += G.get_Manhattan_distance(last_task.goal_arr[last_task.goal_arr.size()-1], task.goal_arr[0]);
                             temp_cost += G.heuristics.at(last_task.goal_arr[last_task.goal_arr.size()-1])[task.goal_arr[0]];
                         }
                         else
                         {
-                            // temp_cost = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);  
                             temp_cost = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];      
                         }
-                        // temp_cost = max(temp_cost, task.release_time);
+                        
                         for (int k = 0; k < task.goal_arr.size()-1; k++)
                             temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
-                            // temp_cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
+                            
+                        // Apply Gaussian-based weight to the cost
+                        double weight = computeGaussianWeight(i, remain_task_id[j]);
+                        // double ignore = computeAllLocationsGaussianWeight(i, 0);
+                        // temp_cost = static_cast<int>(temp_cost * weight);
+                        temp_cost = weight;
+                        
                         cost(i, j) = -temp_cost;
                     }
                 }
@@ -107,15 +110,15 @@ bool LNS::run_Hungarian_greedy()
                     Task& task = tl.tasks_all[j];
                     Agent& agent = al.agents_all[i];
                     int temp_cost = 0;
-                    // int waiting_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
                     int waiting_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
-                    // waiting_time = max(0,task.release_time-waiting_time);
-                    // temp_cost = G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
-                    // temp_cost = G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
                     temp_cost = waiting_time;
                     for (int k = 0; k < task.goal_arr.size()-1; k++)
                         temp_cost += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
-                        // temp_cost += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
+                    
+                    // Apply Gaussian-based weight to the cost
+                    double weight = computeGaussianWeight(i, task.task_id);
+                    temp_cost = static_cast<int>(temp_cost * weight);
+                    
                     cost(i, j) = -temp_cost;
                 }
             }
@@ -409,44 +412,55 @@ int LNS::calculateFlowtime(Agent agent, vector<int> task_sequence)
     
     if (task_sequence.size() == 1) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[0]]];
-        // delivery_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
         delivery_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
         
         if (task.goal_arr.size() > 1)
         {
             for (int i = 0; i < task.goal_arr.size()-1; i++)
                 delivery_time += G.heuristics.at(task.goal_arr[i])[task.goal_arr[i+1]];
-                // delivery_time += G.get_Manhattan_distance(task.goal_arr[i], task.goal_arr[i+1]);
         }
+        
+        // Apply Gaussian-based weight
+        double weight = computeGaussianWeight(agent.agent_id-1, task_sequence[0]);
+        // delivery_time = static_cast<int>(delivery_time * weight);
+        delivery_time = weight;
+        
         sum_of_delivery_time += delivery_time;
     }
+    
     for (int i = 0; i < task_sequence.size()-1; i++) {
         Task& task = tl.tasks_all[tl.tasks_table[task_sequence[i]]];
         Task& next_task = tl.tasks_all[tl.tasks_table[task_sequence[i+1]]];
         if (i == 0) {
-            // delivery_time = agent.start_timestep + G.get_Manhattan_distance(agent.start_location, task.goal_arr[0]);
             delivery_time = agent.start_timestep + G.heuristics.at(task.goal_arr[0])[agent.start_location];
         }
         if (task.goal_arr.size() > 1)
         {
             for (int k = 0; k < task.goal_arr.size()-1; k++)
                 delivery_time += G.heuristics.at(task.goal_arr[k])[task.goal_arr[k+1]];
-                // delivery_time += G.get_Manhattan_distance(task.goal_arr[k], task.goal_arr[k+1]);
         }
+        
+        // Apply Gaussian-based weight for current task
+        double weight = computeGaussianWeight(agent.agent_id-1, task_sequence[i]);
+        delivery_time = static_cast<int>(delivery_time * weight);
+        
         sum_of_delivery_time += delivery_time;
-        // delivery_time += G.get_Manhattan_distance(task.goal_arr[task.goal_arr.size()-1], next_task.goal_arr[0]);
         delivery_time += G.heuristics.at(task.goal_arr[task.goal_arr.size()-1])[next_task.goal_arr[0]];
+        
         if (i == task_sequence.size()-2) {
             if (next_task.goal_arr.size() > 1)
             {
                 for (int k = 0; k < next_task.goal_arr.size()-1; k++)
                     delivery_time += G.heuristics.at(next_task.goal_arr[k])[next_task.goal_arr[k+1]];
-                    // delivery_time += G.get_Manhattan_distance(next_task.goal_arr[k], next_task.goal_arr[k+1]);
             }
+            
+            // Apply Gaussian-based weight for last task
+            weight = computeGaussianWeight(agent.agent_id-1, task_sequence[i+1]);
+            delivery_time = static_cast<int>(delivery_time * weight);
+            
             sum_of_delivery_time += delivery_time;
         }
     }
-    // sum_of_release_time += tl.tasks_all[tl.tasks_table[task_sequence[task_sequence.size()-1]]].release_time;
     return sum_of_delivery_time - sum_of_release_time;
 }
 
@@ -626,12 +640,267 @@ void LNS::printTaskSequence()
     }
 }
 
-vector<tuple<int, vector<int>>> LNS::getTaskSequence()
-{
-    vector<tuple<int, vector<int>>> task_sequence;
-    for (auto& agent : al.agents_all)
-    {
-        task_sequence.push_back(make_tuple(agent.agent_id, agent.task_sequence));
+tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> LNS::getTaskSequence() {
+    vector<tuple<int, vector<int>>> sequences;
+    vector<pair<double, double>> weights;
+    
+    for (const auto& agent : al.agents_all) {
+        if (!agent.task_sequence.empty()) {
+            sequences.push_back(make_tuple(agent.agent_id, agent.task_sequence));
+            
+            // Get the last task in the sequence
+            int last_task_id = agent.task_sequence.back();
+            
+            // Compute both Gaussian weights
+            double warehouse_weight = computeWarehouseGaussianWeight(agent.agent_id-1, last_task_id);
+            double method_weight = computeMethodGaussianWeight(agent.agent_id-1, last_task_id);
+            
+            weights.push_back(make_pair(warehouse_weight, method_weight));
+        }
     }
-    return task_sequence;
+    
+    return make_tuple(sequences, weights);
+}
+
+vector<int> LNS::getUnallocatedTaskLocations() {
+    vector<int> unallocated_locations;
+    
+    // Get all unallocated task locations
+    for (const auto& task : tl.tasks_all) {
+        // Check if this task is not in any agent's sequence
+        bool is_allocated = false;
+        for (const auto& agent : al.agents_all) {
+            if (std::find(agent.task_sequence.begin(), agent.task_sequence.end(), task.task_id) != agent.task_sequence.end()) {
+                is_allocated = true;
+                break;
+            }
+        }
+        
+        // If task is not allocated, add its locations
+        if (!is_allocated) {
+            // Add both start and goal locations
+            unallocated_locations.push_back(task.goal_arr[0]);  // Start location
+            // unallocated_locations.push_back(task.goal_arr.back());  // Goal location
+        }
+    }
+    
+    return unallocated_locations;
+}
+
+vector<double> LNS::computeDistancesToUnallocatedTasks(int agent_id) {
+    vector<double> distances;
+    Agent& agent = al.agents_all[agent_id];
+    
+    // Get the agent's current location
+    int agent_loc = agent.task_sequence.empty() ? agent.start_location : 
+                    tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+    
+    // Get all unallocated task locations
+    vector<int> unallocated_locations = getUnallocatedTaskLocations();
+    
+    // Calculate distances to all unallocated task locations
+    for (int task_loc : unallocated_locations) {
+        // Skip if this is the agent's own current location
+        if (task_loc == agent_loc) continue;
+        
+        // Check if both locations exist in the heuristics map
+        auto it = G.heuristics.find(agent_loc);
+        if (it != G.heuristics.end() && task_loc < it->second.size()) {
+            double dist = it->second[task_loc];
+            distances.push_back(dist);
+        }
+    }
+    
+    return distances;
+}
+
+double LNS::computeMeanDistance(const vector<double>& distances) {
+    if (distances.empty()) return 0.0;
+    double sum = 0.0;
+    for (double dist : distances) {
+        sum += dist;
+    }
+    return sum / distances.size();
+}
+
+double LNS::computeStdDevDistance(const vector<double>& distances, double mean) {
+    if (distances.empty()) return 0.0;
+    double sum_sq_diff = 0.0;
+    for (double dist : distances) {
+        double diff = dist - mean;
+        sum_sq_diff += diff * diff;
+    }
+    return sqrt(sum_sq_diff / distances.size());
+}
+
+double LNS::computeGaussianCDF(double x, double mean, double stddev) {
+    if (stddev == 0) return 1.0;
+    return 0.5 * (1 + erf((x - mean) / (stddev * sqrt(2))));
+}
+
+double LNS::computeWarehouseGaussianWeight(int agent_id, int task_id) {
+    // Get distances to all warehouse locations
+    vector<double> distances = computeDistancesToWarehouseLocations(agent_id);
+    // cout << distances.size() << endl;
+    if (distances.empty()) return 1.0;  // Default weight if no warehouse locations found
+    
+    // Compute mean and standard deviation
+    double mean = computeMeanDistance(distances);
+    double stddev = computeStdDevDistance(distances, mean);
+
+    // cout << "Gaussian weight for the items in the warehouse: " << mean << " " << stddev << endl;
+    
+    // Get the distance to the current task
+    Task& task = tl.tasks_all[tl.tasks_table[task_id]];
+    Agent& agent = al.agents_all[agent_id];
+    int agent_final_loc = agent.task_sequence.empty() ? agent.start_location : 
+                         tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+    
+    // Check if both locations exist in the heuristics map
+    double task_dist = 0.0;
+    auto it = G.heuristics.find(agent_final_loc);
+    if (it != G.heuristics.end() && task.goal_arr[0] < it->second.size()) {
+        task_dist = it->second[task.goal_arr[0]];
+    } else {
+        // If locations not found, use a default large distance
+        task_dist = mean + 2 * stddev;
+    }
+    
+    // Use computeGaussianCDF to get a weight between 0 and 1
+    double cdf = computeGaussianCDF(task_dist, mean, stddev);
+    
+    // Normalize the weight to be between 0.5 and 1.5
+    return 0.5 + cdf;
+}
+
+double LNS::computeMethodGaussianWeight(int agent_id, int task_id) {
+    if (gaussian_method == 0) {
+        // Use unallocated tasks method
+        vector<double> distances = computeDistancesToUnallocatedTasks(agent_id);
+        if (distances.empty()) return 1.0;
+        
+        double mean = computeMeanDistance(distances);
+        double stddev = computeStdDevDistance(distances, mean);
+
+        // cout << "Gaussian weight for unallocated tasks: " << mean << " " << stddev << endl;
+        
+        Task& task = tl.tasks_all[tl.tasks_table[task_id]];
+        Agent& agent = al.agents_all[agent_id];
+        int agent_final_loc = agent.task_sequence.empty() ? agent.start_location : 
+                             tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+        
+        double task_dist = 0.0;
+        auto it = G.heuristics.find(agent_final_loc);
+        if (it != G.heuristics.end() && task.goal_arr[0] < it->second.size()) {
+            task_dist = it->second[task.goal_arr[0]];
+        } else {
+            task_dist = mean + 2 * stddev;
+        }
+        
+        double cdf = computeGaussianCDF(task_dist, mean, stddev);
+        return 0.5 + cdf;
+    } else {
+        // Use warehouse items method
+        return computeWarehouseGaussianWeight(agent_id, task_id);
+    }
+}
+
+double LNS::computeGaussianWeight(int agent_id, int task_id) {
+    // Compute both weights
+    // double warehouse_weight = computeWarehouseGaussianWeight(agent_id, task_id);
+    double method_weight = computeMethodGaussianWeight(agent_id, task_id);
+    
+    // Log both weights to statistics
+    // Note: This will be handled by the Python code that calls this function
+    
+    // Return the weight based on the chosen method
+    return method_weight;
+}
+
+vector<int> LNS::getWarehouseLocations() {
+    vector<int> locations;
+    // Get all locations that have items in the warehouse
+    for (const auto& loc : G.aisle_locations) {
+        int loc_id = G.cols * loc.first + loc.second;
+        if (G.is_location_full(loc_id)) {
+            locations.push_back(loc_id);
+        }
+    }
+    return locations;
+}
+
+vector<double> LNS::computeDistancesToWarehouseLocations(int agent_id) {
+    vector<double> distances;
+    Agent& agent = al.agents_all[agent_id];
+    
+    // Get the agent's current location
+    int agent_loc = agent.task_sequence.empty() ? agent.start_location : 
+                    tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+    
+    // Get all warehouse locations with items
+    vector<int> warehouse_locations = getWarehouseLocations();
+    
+    // Calculate distances to all warehouse locations
+    for (int loc : warehouse_locations) {
+        // Skip if this is the agent's own current location
+        if (loc == agent_loc) continue;
+        
+        // Check if both locations exist in the heuristics map
+        auto it = G.heuristics.find(agent_loc);
+        if (it != G.heuristics.end() && loc < it->second.size()) {
+            double dist = it->second[loc];
+            distances.push_back(dist);
+        }
+    }
+    
+    return distances;
+}
+
+vector<double> LNS::computeDistancesToAllLocations(int agent_id) {
+    vector<double> distances;
+    Agent& agent = al.agents_all[agent_id];
+    
+    // Get the agent's current location
+    int agent_loc = agent.task_sequence.empty() ? agent.start_location : 
+                    tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+    
+    // Calculate distances to all locations in the heuristics map
+    for (const auto& [loc, heuristic_row] : G.heuristics) {
+        // Skip if this is the agent's own current location
+        if (loc == agent_loc) continue;
+        
+        // Check if the location exists in the heuristics map
+        if (loc < heuristic_row.size()) {
+            double dist = heuristic_row[loc];
+            distances.push_back(dist);
+        }
+    }
+    
+    return distances;
+}
+
+double LNS::computeAllLocationsGaussianWeight(int agent_id, int target_loc) {
+    // Get all distances from agent's last location
+    vector<double> distances = computeDistancesToAllLocations(agent_id);
+    
+    // Compute mean and standard deviation
+    double mean = computeMeanDistance(distances);
+    double stddev = computeStdDevDistance(distances, mean);
+
+    // cout << "Gaussian weight for all locations: " << mean << " " << stddev << endl;
+    
+    // Get the distance to the target location
+    Agent& agent = al.agents_all[agent_id];
+    int agent_loc = agent.task_sequence.empty() ? agent.start_location : 
+                    tl.tasks_all[tl.tasks_table[agent.task_sequence.back()]].goal_arr.back();
+    
+    double target_dist = 0.0;
+    auto it = G.heuristics.find(agent_loc);
+    if (it != G.heuristics.end() && target_loc < it->second.size()) {
+        target_dist = it->second[target_loc];
+    }
+    
+    // Compute Gaussian weight
+    double z = (target_dist - mean) / stddev;
+    return exp(-0.5 * z * z);
 }

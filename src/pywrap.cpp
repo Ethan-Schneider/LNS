@@ -10,5 +10,5 @@ constexpr auto byref = py::return_value_policy::reference_internal;
 
 PYBIND11_MODULE(lns, m) {
     m.doc() = "Large Neighborhood Search Multi-Agent Task Allocation Function";
-    m.def("LNS", &pymain, "A function");
+    m.def("LNS", &pymain, "A function that performs LNS-based task allocation");
 }
