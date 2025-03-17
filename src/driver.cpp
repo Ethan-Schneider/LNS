@@ -10,8 +10,8 @@
 #include "States.h"
 #include "../inc/LNS.h"
 
-tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks, vector<tuple<int, tuple<int, int>>> agents, 
-    vector<vector<int>> task_sequences, vector<tuple<int, int>> aisle_locations, int gaussian_method)
+vector<tuple<int, vector<int>>> pymain(string& map_file, vector<tuple<int, tuple<int, int>, tuple<int, int>>> unassigned_tasks, vector<tuple<int, tuple<int, int>>> agents, 
+    vector<vector<int>> task_sequences)
 {
     namespace py=pybind11;
 
@@ -19,16 +19,9 @@ tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> pymain(stri
     if (!G.load_Minghua_map(map_file))
     {   
         std::cout << "Failed to load map." << std::endl;
-        tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> empty;
+        vector<tuple<int, vector<int>>> empty;
         return empty;
     }
-
-    // Set aisle locations
-    vector<pair<int, int>> aisle_pairs;
-    for (const auto& loc : aisle_locations) {
-        aisle_pairs.push_back(make_pair(std::get<0>(loc), std::get<1>(loc)));
-    }
-    G.set_aisle_locations(aisle_pairs);
 
     G.preprocessing(0);
     TasksLoader tl(G, unassigned_tasks);
@@ -64,12 +57,9 @@ tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> pymain(stri
     }
 
     LNS lns(G, tl, al, 2, 1, 2, 2);
-    lns.set_gaussian_method(gaussian_method);  // Set the Gaussian method
     lns.run(1); // 1 second time limit
 
-    // Extract just the sequences from the tuple return
-    auto [sequences, weights] = lns.getTaskSequence();
-    return make_tuple(sequences, weights);
+    return lns.getTaskSequence();
 }
 
 double distance(string& map_file, tuple<int, int> start_loc, tuple<int, int> goal_loc)

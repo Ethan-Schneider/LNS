@@ -60,9 +60,8 @@ public:
     bool run_repeat_Hungarian_greedy();
     bool getInitialSolution();
     void printTaskSequence();
-    tuple<vector<tuple<int, vector<int>>>, vector<pair<double, double>>> getTaskSequence();
+    vector<tuple<int, vector<int>>> getTaskSequence();
     int getFlowtime(Agent agent, vector<int> task_sequence);
-    void set_gaussian_method(int method) { gaussian_method = method; }  // Setter for gaussian_method
 
 private:
     high_resolution_clock::time_point start_time;
@@ -95,21 +94,6 @@ private:
     std::unordered_map<int, vector<int>> best_task_sequence;
     std::unordered_map<int, vector<int>> curr_task_sequence;
     std::map<Key, TaskAssignment*>::iterator iter;
-
-    // New helper functions for Gaussian-based weighting
-    double computeGaussianWeight(int agent_id, int task_id);
-    double computeMeanDistance(const vector<double>& distances);
-    double computeStdDevDistance(const vector<double>& distances, double mean);
-    double computeGaussianCDF(double x, double mean, double stddev);
-    vector<double> computeDistancesToUnallocatedTasks(int agent_id);
-    vector<double> computeDistancesToWarehouseLocations(int agent_id);
-    vector<int> getUnallocatedTaskLocations();
-    vector<int> getWarehouseLocations();
-    double computeWarehouseGaussianWeight(int agent_id, int task_id);
-    double computeMethodGaussianWeight(int agent_id, int task_id);
-    double computeAllLocationsGaussianWeight(int agent_id, int task_id);
-    vector<double> computeDistancesToAllLocations(int agent_id);
-    int gaussian_method = 0;  // 0: unallocated tasks, 1: warehouse items
 
     void initializeAssignmentHeap();
     void sortNeighborsByStrategy(int lns_insertion_strategy);
