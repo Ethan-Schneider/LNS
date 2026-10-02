@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "-Wall -Wextra -fPIC")
 
 find_package(pybind11 REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(dlib REQUIRED)
 
 include_directories("inc")
 include_directories("src")
@@ -43,6 +44,7 @@ pybind11_add_module(dc src/pywrap2.cpp)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE LibsModule)
 target_link_libraries(dc PRIVATE LibsModule)
+target_link_libraries(LibsModule PUBLIC dlib::dlib)
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE VERSION_INFO=${EXAMPLE_VERSION_INFO})
 target_include_directories(${PROJECT_NAME} PRIVATE ${PYBIND11_INCLUDE_DIRS})
